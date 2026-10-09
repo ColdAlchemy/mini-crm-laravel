@@ -11,7 +11,7 @@ CRM enxuto para pequenos negócios: cadastro de clientes, histórico de interaç
 - Interface em PT-BR, responsiva, com tema claro/escuro automático.
 
 ## Stack
-PHP 8.4 · Laravel 12 · Eloquent · Blade · SQLite · PHPUnit
+PHP 8.4 · Laravel 13 · Eloquent · Blade · SQLite · PHPUnit
 
 ## Como rodar
 ```bash
