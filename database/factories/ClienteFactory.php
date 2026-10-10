@@ -11,7 +11,7 @@ class ClienteFactory extends Factory
         return [
             'nome' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'telefone' => fake()->phoneNumber(),
+            'telefone' => fake()->numerify('(99) 9####-####'),
             'empresa' => fake()->company(),
             'status' => 'lead',
         ];

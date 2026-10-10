@@ -14,10 +14,12 @@ class InteracaoController extends Controller
         $dados = $request->validate([
             'tipo' => ['required', Rule::in(array_keys(Interacao::TIPOS))],
             'descricao' => ['required', 'string', 'max:2000'],
+        ], [
+            'descricao.required' => 'Conte o que aconteceu neste contato.',
         ]);
 
         $cliente->interacoes()->create($dados);
 
-        return back()->with('ok', 'Interação registrada.');
+        return back()->with('ok', 'Contato registrado.');
     }
 }

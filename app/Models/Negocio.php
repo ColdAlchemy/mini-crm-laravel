@@ -18,15 +18,29 @@ class Negocio extends Model
         'perdido' => 'Perdido',
     ];
 
-    protected $fillable = ['cliente_id', 'titulo', 'valor', 'etapa'];
+    /** Etapas em que o negócio ainda está em andamento. */
+    public const ABERTAS = ['novo', 'proposta', 'negociacao'];
+
+    protected $fillable = ['cliente_id', 'titulo', 'valor', 'etapa', 'fechado_em'];
 
     protected function casts(): array
     {
-        return ['valor' => 'decimal:2'];
+        return ['valor' => 'decimal:2', 'fechado_em' => 'datetime'];
     }
 
     public function cliente(): BelongsTo
     {
         return $this->belongsTo(Cliente::class);
+    }
+
+    /** Muda a etapa e marca (ou limpa) a data de fechamento. */
+    public function moverPara(string $etapa): void
+    {
+        $fechou = in_array($etapa, ['ganho', 'perdido'], true);
+
+        $this->update([
+            'etapa' => $etapa,
+            'fechado_em' => $fechou ? ($this->fechado_em && in_array($this->etapa, ['ganho', 'perdido'], true) ? $this->fechado_em : now()) : null,
+        ]);
     }
 }

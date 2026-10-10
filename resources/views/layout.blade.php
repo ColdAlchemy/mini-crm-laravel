@@ -2,40 +2,107 @@
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('titulo', 'Mini CRM')</title>
-    <style>
-        :root { --bg:#f6f7f9; --card:#fff; --txt:#1c2330; --mut:#667085; --br:#dfe3ea; --acc:#2457d6; --ok:#157f3b; --err:#b42318; }
-        @media (prefers-color-scheme: dark) { :root { --bg:#12151b; --card:#1b2029; --txt:#e8ecf3; --mut:#9aa4b5; --br:#2c3442; --acc:#6b93ff; --ok:#4cc27a; --err:#f97066; } }
-        * { box-sizing: border-box; }
-        body { margin:0; font:15px/1.5 system-ui, sans-serif; background:var(--bg); color:var(--txt); }
-        header { background:var(--card); border-bottom:1px solid var(--br); padding:12px 16px; display:flex; gap:20px; align-items:center; flex-wrap:wrap; }
-        header strong { font-size:17px; } header a { color:var(--txt); text-decoration:none; } header a:hover { color:var(--acc); }
-        main { max-width:1100px; margin:0 auto; padding:20px 16px; }
-        .card { background:var(--card); border:1px solid var(--br); border-radius:10px; padding:16px; margin-bottom:16px; }
-        table { width:100%; border-collapse:collapse; } th, td { text-align:left; padding:8px; border-bottom:1px solid var(--br); }
-        input, select, textarea, button { font:inherit; padding:8px 10px; border:1px solid var(--br); border-radius:8px; background:var(--bg); color:var(--txt); }
-        button, .btn { background:var(--acc); color:#fff; border:0; cursor:pointer; text-decoration:none; padding:8px 14px; border-radius:8px; display:inline-block; }
-        button.sec { background:transparent; color:var(--txt); border:1px solid var(--br); } button.perigo { background:var(--err); }
-        label { display:block; margin:10px 0 4px; color:var(--mut); } .linha { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-        .ok { color:var(--ok); } .erro { color:var(--err); } .mut { color:var(--mut); }
-        .kanban { display:grid; grid-template-columns:repeat(auto-fit, minmax(190px,1fr)); gap:12px; align-items:start; }
-        .kanban .col { background:var(--card); border:1px solid var(--br); border-radius:10px; padding:10px; }
-        .kanban .item { border:1px solid var(--br); border-radius:8px; padding:8px; margin-top:8px; background:var(--bg); }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0a3a3d">
+    <meta name="color-scheme" content="light">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('titulo', 'Painel') — Balcão</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%230a3a3d'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23f26b5b'/%3E%3C/svg%3E">
+    @foreach (['node_modules/@fontsource-variable/nunito/files/nunito-latin-wght-normal.woff2'] as $fonte)
+        <link rel="preload" as="font" type="font/woff2" crossorigin href="{{ Vite::asset($fonte) }}">
+    @endforeach
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-<header>
-    <strong>Mini CRM</strong>
-    <a href="{{ route('clientes.index') }}">Clientes</a>
-    <a href="{{ route('negocios.index') }}">Negócios</a>
-</header>
-<main>
-    @if (session('ok')) <p class="ok">{{ session('ok') }}</p> @endif
-    @if ($errors->any())
-        <div class="card erro">@foreach ($errors->all() as $e) <div>{{ $e }}</div> @endforeach</div>
-    @endif
-    @yield('conteudo')
-</main>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+
+@auth
+@php
+    $itens = [
+        ['painel', 'Painel', 'painel', 'painel'],
+        ['clientes.index', 'Clientes', 'clientes', 'clientes*'],
+        ['negocios.index', 'Funil', 'funil', 'negocios*'],
+        ['tarefas.index', 'Retornos', 'tarefas', 'tarefas*'],
+    ];
+@endphp
+<div class="app">
+    <aside class="lateral">
+        <a class="marca" href="{{ route('painel') }}" translate="no">
+            <span class="marca-ponto" aria-hidden="true"></span>
+            <span>Balcão<small>mini CRM do comércio</small></span>
+        </a>
+        <nav class="menu" aria-label="Principal">
+            @foreach ($itens as [$rota, $rotulo, $icone, $padrao])
+                <a href="{{ route($rota) }}" @if (request()->routeIs($padrao)) aria-current="page" @endif>
+                    <x-icone :nome="$icone" />
+                    {{ $rotulo }}
+                    @if ($icone === 'tarefas' && $retornosPendentes > 0)
+                        <span class="selo-qtd" aria-label="{{ $retornosPendentes }} para hoje ou atrasados">{{ $retornosPendentes }}</span>
+                    @endif
+                </a>
+            @endforeach
+            <a href="{{ route('etiquetas.index') }}" @if (request()->routeIs('etiquetas*')) aria-current="page" @endif>
+                <x-icone nome="etiqueta" /> Etiquetas
+            </a>
+        </nav>
+        <div class="lateral-rodape">
+            <strong>{{ auth()->user()->name }}</strong>
+            <form method="POST" action="{{ route('sair') }}">
+                @csrf
+                <button type="submit" class="botao-link">Sair</button>
+            </form>
+        </div>
+    </aside>
+
+    <div>
+        <div class="barra-topo">
+            <a class="marca" href="{{ route('painel') }}" translate="no"><span class="marca-ponto" aria-hidden="true"></span>Balcão</a>
+            <form method="POST" action="{{ route('sair') }}">
+                @csrf
+                <button type="submit" class="botao-link">Sair</button>
+            </form>
+        </div>
+
+        <main id="conteudo" class="conteudo" tabindex="-1">
+            @if (session('ok'))
+                <div class="aviso" role="status">{{ session('ok') }}</div>
+            @endif
+            @if ($errors->any() && ! View::hasSection('erros-no-campo'))
+                <div class="aviso erro" role="alert">
+                    @foreach ($errors->all() as $e) <p>{{ $e }}</p> @endforeach
+                </div>
+            @endif
+            @yield('conteudo')
+        </main>
+    </div>
+
+    <nav class="lateral-mobile" aria-label="Principal (celular)">
+        @foreach ($itens as [$rota, $rotulo, $icone, $padrao])
+            <a href="{{ route($rota) }}" @if (request()->routeIs($padrao)) aria-current="page" @endif>
+                <x-icone :nome="$icone" />
+                {{ $rotulo }}
+                @if ($icone === 'tarefas' && $retornosPendentes > 0)
+                    <span class="selo-qtd" aria-label="{{ $retornosPendentes }} para hoje ou atrasados">{{ $retornosPendentes }}</span>
+                @endif
+            </a>
+        @endforeach
+    </nav>
+</div>
+@else
+    @yield('entrada')
+@endauth
+
+<div id="anuncio" class="anuncio" role="status" aria-live="polite"></div>
+
+<dialog id="confirmar" aria-labelledby="confirmar-titulo">
+    <form method="dialog">
+        <h2 id="confirmar-titulo">Tem certeza?</h2>
+        <p id="confirmar-texto"></p>
+        <div class="acoes">
+            <button class="botao-contorno" value="cancelar">Cancelar</button>
+            <button class="botao-perigo" value="ok">Sim, continuar</button>
+        </div>
+    </form>
+</dialog>
 </body>
 </html>
